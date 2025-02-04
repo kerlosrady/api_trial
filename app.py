@@ -1,3 +1,4 @@
+import os
 import json
 import pandas as pd
 from flask import Flask, request, jsonify
@@ -9,9 +10,18 @@ app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all domains for testing
 
-# Authenticate with BigQuery
-service_account_json = "automatic-spotify-scraper.json"
-client = bigquery.Client.from_service_account_json(service_account_json)
+from google.oauth2 import service_account
+
+# Load credentials from the environment variable
+credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+# Convert JSON string back to a dictionary
+import json
+credentials_dict = json.loads(credentials_json)
+
+# Authenticate with BigQuery using the credentials
+credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+client = bigquery.Client(credentials=credentials)
 
 PROJECT_ID = "automatic-spotify-scraper"
 DATASET_ID = "keywords_ranking_data_sheet1"
