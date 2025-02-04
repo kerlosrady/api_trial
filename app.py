@@ -35,81 +35,75 @@ DATASET_ID = "keywords_ranking_data_sheet1"
 TABLE_ID = "afro"
 
 @app.route('/query_bigquery', methods=['POST'])  # Ensure POST is listed here
+import pandas as pd
+from flask import Flask, request, jsonify
+from google.cloud import bigquery
+
+# Initialize Flask app
+app = Flask(__name__)
+
+@app.route('/query_bigquery', methods=['POST'])  # Ensure POST is listed here
 def query_bigquery():
     try:
         # Get user input from request
         user_input = request.json.get("TABLE_ID")
 
-        # Construct SQL Query (Modify based on your dataset)
-        query = f"""
-        SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet1.{TABLE_ID}`
-        """
+        if not user_input:
+            return jsonify({"status": "error", "message": "TABLE_ID is missing in request."})
 
-        # Run the query
-        query_job = client.query(query)
-        results = query_job.result()
+        TABLE_ID = user_input  # Assign TABLE_ID from input
 
-        # Convert results to JSON
-        data = [dict(row) for row in results]
-        data = pd.DataFrame(data)
-        print(data.columns)
+        # Initialize BigQuery client
+        client = bigquery.Client()
 
-        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
-        data1=data[['row_number'] + list(range(1, 99))]
+        # List of dataset names to query
+        dataset_list = [
+            "keywords_ranking_data_sheet1",
+            "keywords_ranking_data_sheet2",
+            "keywords_ranking_data_sheet3",
+            "keywords_ranking_data_sheet4"
+        ]
 
-        # Construct SQL Query (Modify based on your dataset)
-        query = f"""
-                SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet2.{TABLE_ID}`
-                """
+        all_dataframes = []  # Store all dataframes
 
-        # Run the query
-        query_job = client.query(query)
-        results = query_job.result()
+        for dataset in dataset_list:
+            # Construct SQL Query
+            query = f"SELECT * FROM `automatic-spotify-scraper.{dataset}.{TABLE_ID}`"
 
-        # Convert results to JSON
-        data = [dict(row) for row in results]
-        data = pd.DataFrame(data)
-        print(data.columns)
+            # Run the query
+            query_job = client.query(query)
+            results = query_job.result()
 
-        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
-        data2 = data[['row_number'] + list(range(1, 99))]
+            # Convert results to DataFrame
+            data = [dict(row) for row in results]
+            df = pd.DataFrame(data)
 
-        # Construct SQL Query (Modify based on your dataset)
-        query = f"""
-                        SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet3.{TABLE_ID}`
-                        """
+            if df.empty:
+                print(f"❌ No data found for {dataset}.{TABLE_ID}")
+                continue
 
-        # Run the query
-        query_job = client.query(query)
-        results = query_job.result()
+            print(f"✅ Columns for {dataset}.{TABLE_ID}: {df.columns}")
 
-        # Convert results to JSON
-        data = [dict(row) for row in results]
-        data = pd.DataFrame(data)
-        print(data.columns)
+            try:
+                # Rename columns correctly
+                df.columns = ['row_number'] + [int(x) for x in df.columns if 'row' not in x]
+            except ValueError:
+                print(f"❌ Column renaming issue in {dataset}.{TABLE_ID}")
 
-        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
-        data3 = data[['row_number'] + list(range(1, 99))]
+            # Keep only the first 99 columns
+            df = df[['row_number'] + list(range(1, 99))]
 
-        # Construct SQL Query (Modify based on your dataset)
-        query = f"""
-                                SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet4.{TABLE_ID}`
-                                """
+            # Append to list
+            all_dataframes.append(df)
 
-        # Run the query
-        query_job = client.query(query)
-        results = query_job.result()
+        # Concatenate all data
+        if all_dataframes:
+            final_df = pd.concat(all_dataframes, axis=0)
+        else:
+            return jsonify({"status": "error", "message": "No data found in any dataset."})
 
-        # Convert results to JSON
-        data = [dict(row) for row in results]
-        data = pd.DataFrame(data)
-        print(data.columns)
-
-        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
-        data4 = data[['row_number'] + list(range(1, 99))]
-        dataa=pd.concat([data1, data2, data3, data4], axis=0)
-
-        return {"status": "success", "data": dataa}
+        # Convert DataFrame to JSON response
+        return jsonify({"status": "success", "data": final_df.to_dict(orient="records")})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
