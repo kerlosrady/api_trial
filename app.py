@@ -108,8 +108,8 @@ def query_bigquery():
         data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
         data4 = data[['row_number'] + list(range(1, 99))]
         dataa=pd.concat([data1, data2, data3, data4], axis=0)
-        
-        return jsonify({"status": "success", "data": dataa})
+
+        return dataa
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
