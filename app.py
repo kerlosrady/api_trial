@@ -38,12 +38,11 @@ TABLE_ID = "afro"
 def query_bigquery():
     try:
         # Get user input from request
-        user_input = request.json.get("query_param")
+        user_input = request.json.get("TABLE_ID")
 
         # Construct SQL Query (Modify based on your dataset)
         query = f"""
-        SELECT * FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
-        LIMIT 10;
+        SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet1.{TABLE_ID}`
         """
 
         # Run the query
@@ -52,7 +51,65 @@ def query_bigquery():
 
         # Convert results to JSON
         data = [dict(row) for row in results]
-        return jsonify({"status": "success", "data": data})
+        data = pd.DataFrame(data)
+        print(data.columns)
+
+        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
+        data1=data[['row_number'] + list(range(1, 99))]
+
+        # Construct SQL Query (Modify based on your dataset)
+        query = f"""
+                SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet2.{TABLE_ID}`
+                """
+
+        # Run the query
+        query_job = client.query(query)
+        results = query_job.result()
+
+        # Convert results to JSON
+        data = [dict(row) for row in results]
+        data = pd.DataFrame(data)
+        print(data.columns)
+
+        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
+        data2 = data[['row_number'] + list(range(1, 99))]
+
+        # Construct SQL Query (Modify based on your dataset)
+        query = f"""
+                        SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet3.{TABLE_ID}`
+                        """
+
+        # Run the query
+        query_job = client.query(query)
+        results = query_job.result()
+
+        # Convert results to JSON
+        data = [dict(row) for row in results]
+        data = pd.DataFrame(data)
+        print(data.columns)
+
+        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
+        data3 = data[['row_number'] + list(range(1, 99))]
+
+        # Construct SQL Query (Modify based on your dataset)
+        query = f"""
+                                SELECT * FROM `automatic-spotify-scraper.keywords_ranking_data_sheet4.{TABLE_ID}`
+                                """
+
+        # Run the query
+        query_job = client.query(query)
+        results = query_job.result()
+
+        # Convert results to JSON
+        data = [dict(row) for row in results]
+        data = pd.DataFrame(data)
+        print(data.columns)
+
+        data.columns = ['row_number'] + [int(x) for x in data.columns if 'row' not in x]
+        data4 = data[['row_number'] + list(range(1, 99))]
+        dataa=pd.concat([data1, data2, data3, data4], axis=0)
+        
+        return jsonify({"status": "success", "data": dataa})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
