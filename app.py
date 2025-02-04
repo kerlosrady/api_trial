@@ -64,20 +64,27 @@ def query_bigquery():
 
             print(f"✅ Columns for {dataset}.{TABLE_ID}: {df.columns}")
 
-            # ✅ Fix column renaming
-            new_columns = ['row_number']
-            for col in df.columns:
-                if col != 'row_number':  # Keep 'row_number' unchanged
+            # Convert column names to strings first
+            data.columns = data.columns.astypeastype(str)
+
+            # Separate numeric and non-numeric column names
+            numeric_cols = []
+            non_numeric_cols = ['row_number']  # Always keep row_number
+
+            for col in data.columns:
+                if col != 'row_number':  # Skip row_number
                     try:
-                        new_columns.append(int(col))  # Convert numbers to int
+                        numeric_cols.append(int(col))  # Convert purely numeric column names to int
                     except ValueError:
-                        new_columns.append(col)  # Keep strings as is
+                        non_numeric_cols.append(col)  # Keep non-numeric names as strings
 
-            df.columns = new_columns  # Apply updated column names
+            # Sort numeric columns properly
+            numeric_cols.sort()
 
-            df = df[['row_number'] + list(range(1, min(99, len(df.columns))))]  # Keep first 99 columns
+            # Apply updated column order
+            data = data[non_numeric_cols + numeric_cols[:98]]  # Keep first 98 columns only
 
-            all_dataframes.append(df)
+            all_dataframes.append(data)
 
         if all_dataframes:
             final_df = pd.concat(all_dataframes, axis=0)
