@@ -15,13 +15,20 @@ from google.oauth2 import service_account
 # Load credentials from the environment variable
 credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-# Convert JSON string back to a dictionary
-import json
-credentials_dict = json.loads(credentials_json)
-
-# Authenticate with BigQuery using the credentials
-credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-client = bigquery.Client(credentials=credentials)
+# Ensure the credentials are correctly formatted
+if credentials_json:
+    try:
+        credentials_dict = json.loads(credentials_json)  # Convert to dictionary
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+        client = bigquery.Client(credentials=credentials)  # Pass credentials to BigQuery
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON Decode Error: {e}")
+        credentials = None
+        client = None
+else:
+    print("❌ No credentials found in environment variable!")
+    credentials = None
+    client = None
 
 PROJECT_ID = "automatic-spotify-scraper"
 DATASET_ID = "keywords_ranking_data_sheet1"
