@@ -65,13 +65,13 @@ def query_bigquery():
             print(f"✅ Columns for {dataset}.{TABLE_ID}: {df.columns}")
 
             # Convert column names to strings first
-            data.columns = data.columns.astypeastype(str)
+            df.columns = df.columns.astypeastype(str)
 
             # Separate numeric and non-numeric column names
             numeric_cols = []
             non_numeric_cols = ['row_number']  # Always keep row_number
 
-            for col in data.columns:
+            for col in df.columns:
                 if col != 'row_number':  # Skip row_number
                     try:
                         numeric_cols.append(int(col))  # Convert purely numeric column names to int
@@ -82,9 +82,9 @@ def query_bigquery():
             numeric_cols.sort()
 
             # Apply updated column order
-            data = data[non_numeric_cols + numeric_cols[:98]]  # Keep first 98 columns only
+            df = df[non_numeric_cols + numeric_cols[:98]]  # Keep first 98 columns only
 
-            all_dataframes.append(data)
+            all_dataframes.append(df)
 
         if all_dataframes:
             final_df = pd.concat(all_dataframes, axis=0)
