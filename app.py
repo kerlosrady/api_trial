@@ -65,7 +65,7 @@ def query_bigquery():
             print(f"✅ Columns for {dataset}.{TABLE_ID}: {df.columns}")
 
             # Convert column names to strings first
-            df.columns = df.columns.astypeastype(str)
+            df.columns = [str(x) for x in df.columns]
 
             # Separate numeric and non-numeric column names
             numeric_cols = []
@@ -86,12 +86,12 @@ def query_bigquery():
 
             all_dataframes.append(df)
 
-        if all_dataframes:
-            final_df = pd.concat(all_dataframes, axis=0)
-        else:
-            return jsonify({"status": "error", "message": "No data found in any dataset."})
+        # if all_dataframes:
+        #     final_df = pd.concat(all_dataframes, axis=0)
+        # else:
+        #     return jsonify({"status": "error", "message": "No data found in any dataset."})
 
-        return jsonify({"status": "success", "data": final_df.to_dict(orient="records")})
+        return jsonify({"status": "success", "data": all_dataframes})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
