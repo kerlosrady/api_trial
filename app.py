@@ -49,7 +49,7 @@ def query_bigquery():
             "keywords_ranking_data_sheet4"
         ]
 
-        all_dataframes = []
+        all_dataframes = {}
 
         for dataset in dataset_list:
             query = f"SELECT * FROM `automatic-spotify-scraper.{dataset}.{TABLE_ID}`"
@@ -64,32 +64,7 @@ def query_bigquery():
 
             print(f"✅ Columns for {dataset}.{TABLE_ID}: {df.columns}")
 
-            # Convert column names to strings first
-            df.columns = [str(x) for x in df.columns]
-
-            # Separate numeric and non-numeric column names
-            numeric_cols = []
-            non_numeric_cols = ['row_number']  # Always keep row_number
-
-            for col in df.columns:
-                if col != 'row_number':  # Skip row_number
-                    try:
-                        numeric_cols.append(int(col))  # Convert purely numeric column names to int
-                    except ValueError:
-                        non_numeric_cols.append(col)  # Keep non-numeric names as strings
-
-            # Sort numeric columns properly
-            numeric_cols.sort()
-
-            # Apply updated column order
-            df = df[non_numeric_cols + numeric_cols[:98]]  # Keep first 98 columns only
-
-            all_dataframes.append(df)
-
-        # if all_dataframes:
-        #     final_df = pd.concat(all_dataframes, axis=0)
-        # else:
-        #     return jsonify({"status": "error", "message": "No data found in any dataset."})
+            all_dataframes[dataset.replace('keywords_ranking_data_sheet', '')]=df.to_dict(orient="records")
 
         return jsonify({"status": "success", "data": all_dataframes})
 
