@@ -109,7 +109,7 @@ def query_bigquery():
         data4 = data[['row_number'] + list(range(1, 99))]
         dataa=pd.concat([data1, data2, data3, data4], axis=0)
 
-        return dataa
+        return {"status": "success", "data": dataa}
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
